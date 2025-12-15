@@ -163,29 +163,35 @@ def interpretar(param, valor):
         return "⚠️ Alto" if valor > 75 else "✅ Normal"
     return "ℹ️ Monitoreo"
 
+
 df_f = df_f.copy()
 df_f["Estado"] = df_f["Valor"].apply(lambda v: interpretar(contaminante, v))
 
-st.dataframe(df_f[["Ciudad", "Valor", "Unidad", "Estado"]])
+st.dataframe(
+    df_f[["Ciudad", "Valor", "Unidad", "Estado"]],
+    use_container_width=True,
+    hide_index=True
+)
 
 # ---------------- MAPA ----------------
-st.subheader("🗺️ Mapa interactivo de contaminación")
+st.subheader("🗺️ Mapa de contaminación en Guanajuato")
 
 layer = pdk.Layer(
     "ScatterplotLayer",
     data=df_f,
     get_position="[Longitud, Latitud]",
-    get_radius=10000,
-    radius_min_pixels=5,
-    radius_max_pixels=30,
-    get_fill_color=[0, 120, 215, 180],
+    get_radius=8000,
+    radius_min_pixels=6,
+    radius_max_pixels=25,
+    get_fill_color=[0, 102, 204, 180],  # Azul profesional
     pickable=True,
 )
 
+# 📍 Centro exacto de Guanajuato
 view_state = pdk.ViewState(
-    latitude=23.6345,
-    longitude=-102.5528,
-    zoom=5,
+    latitude=21.019,
+    longitude=-101.257,
+    zoom=7.2,
     pitch=0
 )
 
@@ -193,11 +199,13 @@ deck = pdk.Deck(
     layers=[layer],
     initial_view_state=view_state,
     tooltip={
-        "text": "Ciudad: {Ciudad}\nContaminante: {Contaminante}\nValor: {Valor} {Unidad}"
+        "text": "Ciudad: {Ciudad}\nValor: {Valor} {Unidad}"
     }
 )
 
 st.pydeck_chart(deck)
+
+
 
 
 
