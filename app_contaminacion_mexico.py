@@ -3,6 +3,11 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 import pydeck as pdk
+# -------------------------------
+# MODO MANTENIMIENTO (VA AQUÍ)
+# -------------------------------
+MODO_MANTENIMIENTO = True   # o False cuando quieras apagarlo
+
 if MODO_MANTENIMIENTO:
     st.set_page_config(page_title="En mantenimiento", page_icon="🛠️")
     st.markdown(
@@ -23,7 +28,7 @@ if MODO_MANTENIMIENTO:
             <p style="font-size:16px; color:#000000;">
                 Modificaciones en curso por <b>Antonio</b> 👨‍💻
             </p>
-            <p style="color: #333333;">
+            <p style="color:#333333;">
                 Vuelve en unos minutos 🚀
             </p>
         </div>
@@ -195,6 +200,7 @@ deck = pdk.Deck(
 st.pydeck_chart(deck)
 
 st.success("✅ Aplicación funcionando perfectamente")
+
 
 
 
