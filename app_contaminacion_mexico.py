@@ -175,28 +175,30 @@ layer = pdk.Layer(
     "ScatterplotLayer",
     data=df_f,
     get_position="[Longitud, Latitud]",
-    get_radius=8000,
-    get_fill_color="[0, 102, 204, 180]",
-    pickable=True
+    get_radius=10000,
+    radius_min_pixels=5,
+    radius_max_pixels=30,
+    get_fill_color=[0, 120, 215, 180],
+    pickable=True,
 )
 
 view_state = pdk.ViewState(
     latitude=23.6345,
     longitude=-102.5528,
-    zoom=7 if region == "Guanajuato" else 5,
+    zoom=5,
     pitch=0
 )
 
 deck = pdk.Deck(
     layers=[layer],
     initial_view_state=view_state,
-    map_style="mapbox://styles/mapbox/light-v9",
     tooltip={
         "text": "Ciudad: {Ciudad}\nContaminante: {Contaminante}\nValor: {Valor} {Unidad}"
     }
 )
 
 st.pydeck_chart(deck)
+
 
 
 
