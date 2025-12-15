@@ -180,26 +180,29 @@ layer = pdk.Layer(
     pickable=True
 )
 
-lat_mean = df_f["Latitud"].mean() if not df_f.empty else 19.432608
-lon_mean = df_f["Longitud"].mean() if not df_f.empty else -99.133209
-
 view_state = pdk.ViewState(
-    latitude=lat_mean,
-    longitude=lon_mean,
-    zoom=6 if region == "Guanajuato" else 4
+    latitude=23.6345,      # Centro de México
+    longitude=-102.5528,   # Centro de México
+    zoom=7 if region == "Guanajuato" else 5,
+    pitch=0
 )
+
 
 deck = pdk.Deck(
     layers=[layer],
     initial_view_state=view_state,
+    map_style="mapbox://styles/mapbox/light-v9",
     tooltip={
         "text": "Ciudad: {Ciudad}\nContaminante: {Contaminante}\nValor: {Valor} {Unidad}"
     }
 )
 
+)
+
 st.pydeck_chart(deck)
 
 st.success("✅ Aplicación funcionando perfectamente")
+
 
 
 
