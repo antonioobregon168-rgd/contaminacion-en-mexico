@@ -6,7 +6,7 @@ import pydeck as pdk
 # -------------------------------
 # MODO MANTENIMIENTO (VA AQUÍ)
 # -------------------------------
-MODO_MANTENIMIENTO = True  # o False cuando quieras apagarlo
+MODO_MANTENIMIENTO = False # o False cuando quieras apagarlo
 
 if MODO_MANTENIMIENTO:
     st.set_page_config(page_title="En mantenimiento", page_icon="🛠️")
@@ -202,6 +202,7 @@ deck = pdk.Deck(
 st.pydeck_chart(deck)
 
 st.success("✅ Aplicación funcionando perfectamente")
+
 
 
 
