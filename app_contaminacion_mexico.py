@@ -3,6 +3,38 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 import pydeck as pdk
+# -------------------------------
+# MODO MANTENIMIENTO
+# -------------------------------
+MODO_MANTENIMIENTO = False  # Cambia a True cuando estés actualizando
+
+if MODO_MANTENIMIENTO:
+    st.set_page_config(page_title="En mantenimiento", page_icon="🛠️")
+    st.markdown(
+        """
+        <div style="
+            text-align: center;
+            margin-top: 100px;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.1);
+        ">
+            <h1>🛠️ Sitio en mantenimiento</h1>
+            <p style="font-size:18px;">
+                Lo sentimos, la aplicación está siendo actualizada.
+            </p>
+            <p style="font-size:16px;">
+                Modificaciones en curso por <b>Antonio</b> 👨‍💻
+            </p>
+            <p style="color: gray;">
+                Vuelve en unos minutos 🚀
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.stop()
 
 # ---------------- CONFIGURACIÓN ----------------
 st.set_page_config(
@@ -166,6 +198,7 @@ deck = pdk.Deck(
 st.pydeck_chart(deck)
 
 st.success("✅ Aplicación funcionando perfectamente")
+
 
 
 
