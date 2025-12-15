@@ -36,50 +36,54 @@ headers = {
     "From": "tucorreo@gmail.com"
 }
 
-response = requests.get(BASE_URL, params=params, headers=headers, timeout=20)
-
-if response.status_code != 200:
-    st.error("❌ No se pudieron obtener los datos en este momento.")
-    st.stop()
-
-data = response.json().get("results", [])
-
-if not data:
-    st.warning("⚠️ No hay datos disponibles ahora mismo. Intenta más tarde.")
-    st.stop()
-
+try:
+    response = requests.get(BASE_URL, params=params, headers=headers, timeout=20)
+    response.raise_for_status()
+    data = response.json().get("results", [])
+except:
+    st.warning("❌ No se pudieron obtener los datos en este momento. Mostrando mapa vacío.")
+    data = []
 
 # ---------------- PROCESAMIENTO ----------------
 records = []
 
-for station in data:
-    city = station.get("city", "Desconocido")
-    location = station.get("location", "N/A")
-    coords = station.get("coordinates", {})
+if not data:
+    # Creamos un registro ficticio para mostrar el mapa
+    records.append({
+        "Ciudad": "CDMX",
+        "Estación": "Sin datos",
+        "Contaminante": "PM25",
+        "Valor": 0,
+        "Unidad": "µg/m³",
+        "Fecha": "",
+        "Latitud": 19.432608,
+        "Longitud": -99.133209
+    })
+else:
+    for station in data:
+        city = station.get("city", "Desconocido")
+        location = station.get("location", "N/A")
+        coords = station.get("coordinates", {})
 
-    lat = coords.get("latitude")
-    lon = coords.get("longitude")
+        lat = coords.get("latitude")
+        lon = coords.get("longitude")
 
-    if lat is None or lon is None:
-        continue
+        if lat is None or lon is None:
+            continue
 
-    for m in station["measurements"]:
-        records.append({
-            "Ciudad": city,
-            "Estación": location,
-            "Contaminante": m["parameter"].upper(),
-            "Valor": m["value"],
-            "Unidad": m["unit"],
-            "Fecha": m["lastUpdated"],
-            "Latitud": lat,
-            "Longitud": lon
-        })
+        for m in station["measurements"]:
+            records.append({
+                "Ciudad": city,
+                "Estación": location,
+                "Contaminante": m["parameter"].upper(),
+                "Valor": m["value"],
+                "Unidad": m["unit"],
+                "Fecha": m["lastUpdated"],
+                "Latitud": lat,
+                "Longitud": lon
+            })
 
 df = pd.DataFrame(records)
-
-if df.empty:
-    st.warning("⚠️ No hay datos disponibles.")
-    st.stop()
 
 # ---------------- TABLA ----------------
 st.subheader("📊 Datos de Contaminación")
@@ -142,9 +146,12 @@ layer = pdk.Layer(
     pickable=True
 )
 
+lat_mean = df_f["Latitud"].mean() if not df_f.empty else 19.432608
+lon_mean = df_f["Longitud"].mean() if not df_f.empty else -99.133209
+
 view_state = pdk.ViewState(
-    latitude=df_f["Latitud"].mean(),
-    longitude=df_f["Longitud"].mean(),
+    latitude=lat_mean,
+    longitude=lon_mean,
     zoom=6 if region == "Guanajuato" else 4
 )
 
@@ -159,5 +166,7 @@ deck = pdk.Deck(
 st.pydeck_chart(deck)
 
 st.success("✅ Aplicación funcionando perfectamente")
+
+
 
 
