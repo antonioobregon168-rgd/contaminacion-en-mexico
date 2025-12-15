@@ -173,25 +173,25 @@ st.dataframe(
     hide_index=True
 )
 
+
 # ---------------- MAPA ----------------
-st.subheader("🗺️ Mapa de contaminación en Guanajuato")
+st.subheader("🗺️ Contaminación del aire en México")
 
 layer = pdk.Layer(
     "ScatterplotLayer",
     data=df_f,
     get_position="[Longitud, Latitud]",
-    get_radius=8000,
+    get_radius=9000,
     radius_min_pixels=6,
-    radius_max_pixels=25,
-    get_fill_color=[0, 102, 204, 180],  # Azul profesional
+    radius_max_pixels=35,
+    get_fill_color=[0, 150, 255, 180],
     pickable=True,
 )
 
-# 📍 Centro exacto de Guanajuato
 view_state = pdk.ViewState(
-    latitude=21.019,
-    longitude=-101.257,
-    zoom=7.2,
+    latitude=23.6345,
+    longitude=-102.5528,
+    zoom=5.3,   # 🔥 México completo
     pitch=0
 )
 
@@ -199,12 +199,11 @@ deck = pdk.Deck(
     layers=[layer],
     initial_view_state=view_state,
     tooltip={
-        "text": "Ciudad: {Ciudad}\nValor: {Valor} {Unidad}"
+        "text": "Ciudad: {Ciudad}\nContaminante: {Contaminante}\nValor: {Valor} {Unidad}"
     }
 )
 
 st.pydeck_chart(deck)
-
 
 
 
