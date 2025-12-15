@@ -31,13 +31,23 @@ params = {
 if region == "Guanajuato":
     params["state"] = "Guanajuato"
 
-response = requests.get(BASE_URL, params=params)
+headers = {
+    "User-Agent": "Monitor-Contaminacion-Mexico",
+    "From": "tucorreo@gmail.com"
+}
+
+response = requests.get(BASE_URL, params=params, headers=headers, timeout=20)
 
 if response.status_code != 200:
-    st.error("❌ No se pudieron obtener los datos.")
+    st.error("❌ No se pudieron obtener los datos en este momento.")
     st.stop()
 
-data = response.json()["results"]
+data = response.json().get("results", [])
+
+if not data:
+    st.warning("⚠️ No hay datos disponibles ahora mismo. Intenta más tarde.")
+    st.stop()
+
 
 # ---------------- PROCESAMIENTO ----------------
 records = []
@@ -149,4 +159,5 @@ deck = pdk.Deck(
 st.pydeck_chart(deck)
 
 st.success("✅ Aplicación funcionando perfectamente")
+
 
