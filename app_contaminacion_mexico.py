@@ -187,7 +187,6 @@ view_state = pdk.ViewState(
     pitch=0
 )
 
-
 deck = pdk.Deck(
     layers=[layer],
     initial_view_state=view_state,
@@ -197,11 +196,8 @@ deck = pdk.Deck(
     }
 )
 
-)
-
 st.pydeck_chart(deck)
 
-st.success("✅ Aplicación funcionando perfectamente")
 
 
 
