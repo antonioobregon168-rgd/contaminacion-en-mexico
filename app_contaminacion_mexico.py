@@ -175,14 +175,14 @@ layer = pdk.Layer(
     "ScatterplotLayer",
     data=df_f,
     get_position="[Longitud, Latitud]",
-    get_radius="Valor * 60",
-    get_fill_color="[255, 80, 80, 160]",
+    get_radius=8000,
+    get_fill_color="[0, 102, 204, 180]",
     pickable=True
 )
 
 view_state = pdk.ViewState(
-    latitude=23.6345,      # Centro de México
-    longitude=-102.5528,   # Centro de México
+    latitude=23.6345,
+    longitude=-102.5528,
     zoom=7 if region == "Guanajuato" else 5,
     pitch=0
 )
@@ -197,6 +197,7 @@ deck = pdk.Deck(
 )
 
 st.pydeck_chart(deck)
+
 
 
 
