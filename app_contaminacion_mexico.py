@@ -81,18 +81,31 @@ except:
 # ---------------- PROCESAMIENTO ----------------
 records = []
 
-if not data:
-    # Creamos un registro ficticio para mostrar el mapa
-    records.append({
-        "Ciudad": "CDMX",
-        "Estación": "Sin datos",
-        "Contaminante": "PM25",
-        "Valor": 0,
-        "Unidad": "µg/m³",
-        "Fecha": "",
-        "Latitud": 19.432608,
-        "Longitud": -99.133209
-    })
+if data:
+    for station in data:
+        city = station.get("city", "Desconocido")
+        location = station.get("location", "N/A")
+        coords = station.get("coordinates", {})
+
+        lat = coords.get("latitude")
+        lon = coords.get("longitude")
+
+        if lat is None or lon is None:
+            continue
+
+        for m in station["measurements"]:
+            records.append({
+                "Ciudad": city,
+                "Estación": location,
+                "Contaminante": m["parameter"].upper(),
+                "Valor": m["value"],
+                "Unidad": m["unit"],
+                "Fecha": m["lastUpdated"],
+                "Latitud": lat,
+                "Longitud": lon
+            })
+
+
 else:
     for station in data:
         city = station.get("city", "Desconocido")
@@ -204,6 +217,7 @@ deck = pdk.Deck(
 )
 
 st.pydeck_chart(deck)
+
 
 
 
