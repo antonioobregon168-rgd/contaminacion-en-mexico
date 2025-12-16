@@ -11,29 +11,41 @@ MODO_MANTENIMIENTO = True # Cambia a True si estás actualizando
 
 if MODO_MANTENIMIENTO:
     st.set_page_config(page_title="En mantenimiento", page_icon="🛠️")
+
     st.markdown(
         """
-        <div style="text-align:center;margin-top:120px;">
+        <style>
+        body {
+            background-color: white !important;
+        }
+        .stApp {
+            background-color: white !important;
+        }
+        </style>
+
+        <div style="
+            background-color:white;
+            height:100vh;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+        ">
             <h1 style="color:black;">🛠️ Sitio en mantenimiento</h1>
-            <p style="color:black;">Actualizaciones en curso por <b>Antonio</b> 👨‍💻</p>
-            <p style="color:gray;">Vuelve en unos minutos 🚀</p>
+            <p style="color:black;font-size:18px;">
+                La aplicación está siendo actualizada
+            </p>
+            <p style="color:black;font-size:16px;">
+                Modificaciones en curso por <b>Antonio</b> 👨‍💻
+            </p>
+            <p style="color:gray;">
+                Vuelve en unos minutos 🚀
+            </p>
         </div>
         """,
         unsafe_allow_html=True
     )
     st.stop()
-
-# ===============================
-# CONFIGURACIÓN GENERAL
-# ===============================
-st.set_page_config(
-    page_title="Monitor de Contaminación - México",
-    page_icon="🌎",
-    layout="wide"
-)
-
-st.title("🌫️ Monitor de Contaminación del Aire en México")
-st.write("Datos ambientales en tiempo casi real (OpenAQ)")
 
 # ===============================
 # REGIÓN
@@ -155,6 +167,7 @@ deck = pdk.Deck(
 st.pydeck_chart(deck)
 
 st.success("✅ Aplicación cargada correctamente")
+
 
 
 
