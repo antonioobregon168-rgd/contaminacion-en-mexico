@@ -85,19 +85,17 @@ df = pd.DataFrame(registros)
 # ===============================
 # DATOS DE RESPALDO (CLAVE)
 # ===============================
-if df.empty:
-    st.warning("⚠️ API no disponible. Usando datos de respaldo.")
+df = pd.DataFrame(
+    [
+        ["CDMX", "PM25", 28, "µg/m³", 19.4326, -99.1332],
+        ["León", "PM25", 41, "µg/m³", 21.1220, -101.6860],
+        ["Guanajuato", "PM25", 35, "µg/m³", 21.0190, -101.2574],
+        ["Celaya", "PM25", 38, "µg/m³", 20.5270, -100.8123],
+        ["Salamanca", "PM25", 45, "µg/m³", 20.5710, -101.1910],
+    ],
+    columns=["Ciudad", "Contaminante", "Valor", "Unidad", "Latitud", "Longitud"]
+)
 
-    df = pd.DataFrame(
-        [
-            ["CDMX", "PM25", 28, "µg/m³", 19.4326, -99.1332],
-            ["León", "PM25", 41, "µg/m³", 21.1220, -101.6860],
-            ["Irapuato", "PM25", 35, "µg/m³", 20.6767, -101.3563],
-            ["Celaya", "PM25", 38, "µg/m³", 20.5270, -100.8123],
-            ["Salamanca", "PM25", 45, "µg/m³", 20.5710, -101.1910],
-        ],
-        columns=["Ciudad", "Contaminante", "Valor", "Unidad", "Latitud", "Longitud"]
-    )
 
 # ===============================
 # FILTRO GUANAJUATO
@@ -157,6 +155,7 @@ deck = pdk.Deck(
 st.pydeck_chart(deck)
 
 st.success("✅ Aplicación cargada correctamente")
+
 
 
 
