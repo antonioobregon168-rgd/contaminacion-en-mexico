@@ -4,10 +4,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pydeck as pdk
 
-# ==================================================
-# 🛠️ MODO MANTENIMIENTO
-# ==================================================
-MODO_MANTENIMIENTO = False  # ⬅️ pon True cuando estés actualizando
+# ===============================
+# MODO MANTENIMIENTO
+# ===============================
+MODO_MANTENIMIENTO = False  # Cambia a True cuando estés actualizando
 
 if MODO_MANTENIMIENTO:
     st.set_page_config(page_title="En mantenimiento", page_icon="🛠️")
@@ -17,7 +17,7 @@ if MODO_MANTENIMIENTO:
             text-align:center;
             margin-top:120px;
             padding:40px;
-            background-color:#ffffff;
+            background-color:white;
             border-radius:15px;
             box-shadow:0px 10px 30px rgba(0,0,0,0.1);
         ">
@@ -29,7 +29,7 @@ if MODO_MANTENIMIENTO:
                 Modificaciones en curso por <b>Antonio</b> 👨‍💻
             </p>
             <p style="color:gray;">
-                Regresa en unos minutos 🚀
+                Vuelve en unos minutos 🚀
             </p>
         </div>
         """,
@@ -37,9 +37,9 @@ if MODO_MANTENIMIENTO:
     )
     st.stop()
 
-# ==================================================
-# ⚙️ CONFIGURACIÓN GENERAL
-# ==================================================
+# ===============================
+# CONFIGURACIÓN
+# ===============================
 st.set_page_config(
     page_title="Monitor de Contaminación - México",
     page_icon="🌎",
@@ -47,17 +47,20 @@ st.set_page_config(
 )
 
 st.title("🌫️ Monitor de Contaminación del Aire en México")
-st.write("Datos reales (o de demostración) para visualización ambiental")
+st.write("Datos reales en tiempo casi real obtenidos desde **OpenAQ**")
 
-# ==================================================
-# 🔧 OPCIÓN DEMO
-# ==================================================
-usar_datos_demo = st.checkbox("🔧 Usar datos de ejemplo (demo)", value=True)
+# ===============================
+# REGIÓN
+# ===============================
+region = st.selectbox(
+    "📍 Selecciona región:",
+    ["México (todo el país)", "Guanajuato"]
+)
 
-# ==================================================
-# 🌐 API OpenAQ
-# ==================================================
-BASE_URL = "https://api.openaq.org/v2/latest"
+# ===============================
+# API OpenAQ
+# ===============================
+url = "https://api.openaq.org/v2/latest"
 
 params = {
     "country": "MX",
@@ -69,67 +72,69 @@ headers = {
 }
 
 try:
-    response = requests.get(BASE_URL, params=params, headers=headers, timeout=20)
-    response.raise_for_status()
-    data = response.json().get("results", [])
+    r = requests.get(url, params=params, headers=headers, timeout=20)
+    r.raise_for_status()
+    data = r.json().get("results", [])
 except:
     data = []
 
-# ==================================================
-# 🔄 PROCESAMIENTO
-# ==================================================
-records = []
+# ===============================
+# PROCESAMIENTO
+# ===============================
+registros = []
 
-if data:
-    for station in data:
-        city = station.get("city", "Desconocido")
-        coords = station.get("coordinates", {})
+for estación in data:
+    ciudad = estación.get("city", "Desconocido")
+    coords = estación.get("coordinates", {})
 
-        lat = coords.get("latitude")
-        lon = coords.get("longitude")
+    lat = coords.get("latitude")
+    lon = coords.get("longitude")
 
-        if lat is None or lon is None:
-            continue
+    if lat is None or lon is None:
+        continue
 
-        for m in station.get("measurements", []):
-            records.append({
-                "Ciudad": city,
-                "Contaminante": m.get("parameter", "").upper(),
-                "Valor": m.get("value"),
-                "Unidad": m.get("unit"),
-                "Latitud": lat,
-                "Longitud": lon
-            })
+    for m in estación.get("measurements", []):
+        registros.append({
+            "Ciudad": ciudad,
+            "Contaminante": m["parameter"].upper(),
+            "Valor": m["value"],
+            "Unidad": m["unit"],
+            "Latitud": lat,
+            "Longitud": lon
+        })
 
-df = pd.DataFrame(records)
+df = pd.DataFrame(registros)
 
-# ==================================================
-# 📦 DATOS DEMO SI NO HAY API
-# ==================================================
-if df.empty and usar_datos_demo:
-    df = pd.DataFrame([
-        {"Ciudad":"CDMX","Contaminante":"PM25","Valor":55,"Unidad":"µg/m³","Latitud":19.43,"Longitud":-99.13},
-        {"Ciudad":"Guadalajara","Contaminante":"PM25","Valor":32,"Unidad":"µg/m³","Latitud":20.67,"Longitud":-103.35},
-        {"Ciudad":"Monterrey","Contaminante":"PM25","Valor":41,"Unidad":"µg/m³","Latitud":25.68,"Longitud":-100.31},
-        {"Ciudad":"León","Contaminante":"PM25","Valor":28,"Unidad":"µg/m³","Latitud":21.12,"Longitud":-101.68}
-    ])
-
-# ==================================================
-# ⚠️ SI AÚN NO HAY DATOS
-# ==================================================
 if df.empty:
-    st.warning("⚠️ No hay datos disponibles para mostrar.")
+    st.error("❌ No se pudieron cargar datos.")
     st.stop()
 
-# ==================================================
-# 📊 TABLA GENERAL
-# ==================================================
-st.subheader("📊 Datos de Contaminación")
-st.dataframe(df, use_container_width=True, hide_index=True)
+# ===============================
+# FILTRO GUANAJUATO
+# ===============================
+if region == "Guanajuato":
+    ciudades_gto = ["León", "Irapuato", "Celaya", "Salamanca", "Guanajuato"]
+    df = df[df["Ciudad"].isin(ciudades_gto)]
 
-# ==================================================
-# 🧠 FUNCIÓN INTERPRETACIÓN
-# ==================================================
+# ===============================
+# TABLA
+# ===============================
+st.subheader("📊 Datos de contaminación")
+st.dataframe(df, use_container_width=True)
+
+# ===============================
+# CONTAMINANTE
+# ===============================
+contaminante = st.selectbox(
+    "🔍 Selecciona contaminante:",
+    sorted(df["Contaminante"].unique())
+)
+
+df_f = df[df["Contaminante"] == contaminante].copy()
+
+# ===============================
+# INTERPRETACIÓN
+# ===============================
 def interpretar(param, valor):
     if param == "PM25":
         return "⚠️ Malo" if valor > 35 else "✅ Aceptable"
@@ -145,22 +150,11 @@ def interpretar(param, valor):
         return "⚠️ Alto" if valor > 75 else "✅ Normal"
     return "ℹ️ Monitoreo"
 
-# ==================================================
-# 🔍 SELECCIÓN DE CONTAMINANTE
-# ==================================================
-st.subheader("🔍 Análisis por contaminante")
-
-contaminante = st.selectbox(
-    "Selecciona un contaminante:",
-    sorted(df["Contaminante"].unique())
-)
-
-df_f = df[df["Contaminante"] == contaminante].copy()
 df_f["Estado"] = df_f["Valor"].apply(lambda v: interpretar(contaminante, v))
 
-# ==================================================
-# 📈 GRÁFICA
-# ==================================================
+# ===============================
+# GRÁFICA
+# ===============================
 st.subheader("📈 Niveles por ciudad")
 
 fig, ax = plt.subplots()
@@ -172,47 +166,46 @@ plt.xticks(rotation=45)
 
 st.pyplot(fig)
 
-# ==================================================
-# 🧠 TABLA INTERPRETADA
-# ==================================================
-st.subheader("🧠 Interpretación automática")
-st.dataframe(
-    df_f[["Ciudad", "Valor", "Unidad", "Estado"]],
-    use_container_width=True,
-    hide_index=True
-)
-
-# ==================================================
-# 🗺️ MAPA MÉXICO
-# ==================================================
-st.subheader("🗺️ Mapa de contaminación en México")
+# ===============================
+# MAPA
+# ===============================
+st.subheader("🗺️ Mapa interactivo")
 
 layer = pdk.Layer(
     "ScatterplotLayer",
     data=df_f,
     get_position="[Longitud, Latitud]",
-    get_radius=9000,
-    radius_min_pixels=6,
-    radius_max_pixels=30,
-    get_fill_color=[0, 120, 255, 180],
+    get_radius=3000,
+    get_fill_color="[0, 120, 255, 180]",
     pickable=True
 )
 
-view_state = pdk.ViewState(
-    latitude=23.6345,
-    longitude=-102.5528,
-    zoom=5.3
-)
+if region == "Guanajuato":
+    view_state = pdk.ViewState(
+        latitude=21.12,
+        longitude=-101.68,
+        zoom=7.5
+    )
+else:
+    view_state = pdk.ViewState(
+        latitude=23.6345,
+        longitude=-102.5528,
+        zoom=5.3
+    )
 
 deck = pdk.Deck(
     layers=[layer],
     initial_view_state=view_state,
-    tooltip={"text": "Ciudad: {Ciudad}\nValor: {Valor} {Unidad}"}
+    tooltip={
+        "text": "Ciudad: {Ciudad}\nValor: {Valor} {Unidad}\nEstado: {Estado}"
+    }
 )
 
 st.pydeck_chart(deck)
 
 st.success("✅ Aplicación funcionando correctamente")
+
+
 
 
 
