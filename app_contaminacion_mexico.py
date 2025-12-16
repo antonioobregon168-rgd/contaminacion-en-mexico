@@ -90,51 +90,30 @@ if data:
         lat = coords.get("latitude")
         lon = coords.get("longitude")
 
+        # Saltar estaciones sin coordenadas
         if lat is None or lon is None:
             continue
 
-        for m in station["measurements"]:
+        for m in station.get("measurements", []):
             records.append({
                 "Ciudad": city,
                 "Estación": location,
-                "Contaminante": m["parameter"].upper(),
-                "Valor": m["value"],
-                "Unidad": m["unit"],
-                "Fecha": m["lastUpdated"],
+                "Contaminante": m.get("parameter", "").upper(),
+                "Valor": m.get("value"),
+                "Unidad": m.get("unit"),
+                "Fecha": m.get("lastUpdated"),
                 "Latitud": lat,
                 "Longitud": lon
             })
 
-
-else:
-    for station in data:
-        city = station.get("city", "Desconocido")
-        location = station.get("location", "N/A")
-        coords = station.get("coordinates", {})
-
-        lat = coords.get("latitude")
-        lon = coords.get("longitude")
-
-        if lat is None or lon is None:
-            continue
-
-        for m in station["measurements"]:
-            records.append({
-                "Ciudad": city,
-                "Estación": location,
-                "Contaminante": m["parameter"].upper(),
-                "Valor": m["value"],
-                "Unidad": m["unit"],
-                "Fecha": m["lastUpdated"],
-                "Latitud": lat,
-                "Longitud": lon
-            })
-
+# Crear DataFrame
 df = pd.DataFrame(records)
 
-# ---------------- TABLA ----------------
-st.subheader("📊 Datos de Contaminación")
-st.dataframe(df, use_container_width=True)
+# 🛑 Si no hay datos, detener app limpiamente
+if df.empty:
+    st.warning("⚠️ No hay datos de contaminación disponibles en este momento.")
+    st.stop()
+
 
 # ---------------- SELECCIÓN DE CONTAMINANTE ----------------
 st.subheader("🔍 Análisis por contaminante")
@@ -217,6 +196,7 @@ deck = pdk.Deck(
 )
 
 st.pydeck_chart(deck)
+
 
 
 
