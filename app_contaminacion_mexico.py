@@ -4,87 +4,113 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pydeck as pdk
 
-# ===============================
+# ======================================
 # MODO MANTENIMIENTO
-# ===============================
-MODO_MANTENIMIENTO = False # Cambia a True si estás actualizando
+# ======================================
+MODO_MANTENIMIENTO = False  # Cambia a True si estás actualizando
 
 if MODO_MANTENIMIENTO:
     st.set_page_config(page_title="En mantenimiento", page_icon="🛠️")
-
-    st.markdown(
-        """
-        <style>
-        body {
-            background-color: white !important;
-        }
-        .stApp {
-            background-color: white !important;
-        }
-        </style>
-
+    st.markdown("""
         <div style="
             background-color:white;
-            height:100vh;
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            align-items:center;
+            color:black;
+            padding:40px;
+            margin-top:100px;
+            border-radius:15px;
+            text-align:center;
+            box-shadow:0px 10px 30px rgba(0,0,0,0.15);
         ">
-            <h1 style="color:black;">🛠️ Sitio en mantenimiento</h1>
-            <p style="color:black;font-size:18px;">
-                La aplicación está siendo actualizada
-            </p>
-            <p style="color:black;font-size:16px;">
-                Modificaciones en curso por <b>Antonio</b> 👨‍💻
-            </p>
-            <p style="color:gray;">
-                Vuelve en unos minutos 🚀
-            </p>
+            <h1>🛠️ Sitio en mantenimiento</h1>
+            <p>La aplicación está siendo actualizada</p>
+            <p><b>Modificaciones por Antonio</b> 👨‍💻</p>
+            <p style="color:gray;">Vuelve en unos minutos 🚀</p>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
     st.stop()
 
-# ===============================
-# REGIÓN
-# ===============================
+# ======================================
+# CONFIGURACIÓN GENERAL
+# ======================================
+st.set_page_config(
+    page_title="Monitor de Contaminación en México",
+    page_icon="🌎",
+    layout="wide"
+)
+
+st.title("🌫️ Monitor de Contaminación del Aire en México")
+st.write("Datos ambientales en tiempo casi real obtenidos desde OpenAQ")
+
+# ======================================
+# MODO EDUCATIVO
+# ======================================
+st.subheader("📘 Modo Educativo")
+
+with st.expander("¿Qué son los contaminantes más comunes?"):
+    st.markdown("""
+    **PM2.5** – Partículas muy pequeñas, dañan pulmones  
+    **PM10** – Irritan ojos y garganta  
+    **NO₂** – Proviene de autos e industrias  
+    **O₃** – Afecta vías respiratorias  
+    **CO** – Gas tóxico invisible
+    """)
+
+with st.expander("¿Por qué es importante monitorear el aire?"):
+    st.markdown("""
+    🌎 Protege la salud  
+    👶 Cuida a niños y adultos mayores  
+    📊 Ayuda a tomar decisiones ambientales
+    """)
+
+# ======================================
+# SELECCIÓN DE REGIÓN
+# ======================================
 region = st.selectbox(
-    "📍 Selecciona región:",
+    "Selecciona la región:",
     ["México (todo el país)", "Guanajuato"]
 )
 
-# ===============================
+# ======================================
 # OBTENER DATOS (OpenAQ)
-# ===============================
-url = "https://api.openaq.org/v2/latest"
-params = {"country": "MX", "limit": 200}
+# ======================================
+BASE_URL = "https://api.openaq.org/v2/latest"
+
+params = {
+    "country": "MX",
+    "limit": 200
+}
+
+if region == "Guanajuato":
+    params["state"] = "Guanajuato"
+
+headers = {
+    "User-Agent": "Monitor-Contaminacion-Mexico"
+}
 
 try:
-    r = requests.get(url, params=params, timeout=15)
-    r.raise_for_status()
-    data = r.json().get("results", [])
+    response = requests.get(BASE_URL, params=params, headers=headers, timeout=20)
+    response.raise_for_status()
+    data = response.json().get("results", [])
 except:
     data = []
 
-# ===============================
-# PROCESAMIENTO
-# ===============================
-registros = []
+# ======================================
+# PROCESAMIENTO DE DATOS
+# ======================================
+records = []
 
-for e in data:
-    ciudad = e.get("city", "Desconocido")
-    coords = e.get("coordinates", {})
+for station in data:
+    city = station.get("city", "Desconocido")
+    coords = station.get("coordinates", {})
     lat = coords.get("latitude")
     lon = coords.get("longitude")
 
     if lat is None or lon is None:
         continue
 
-    for m in e.get("measurements", []):
-        registros.append({
-            "Ciudad": ciudad,
+    for m in station.get("measurements", []):
+        records.append({
+            "Ciudad": city,
             "Contaminante": m["parameter"].upper(),
             "Valor": m["value"],
             "Unidad": m["unit"],
@@ -92,34 +118,29 @@ for e in data:
             "Longitud": lon
         })
 
-df = pd.DataFrame(registros)
+df = pd.DataFrame(records)
 
-# ===============================
-# DATOS DE RESPALDO (CLAVE)
-# ===============================
-df = pd.DataFrame(
-    [
-        ["CDMX", "PM25", 28, "µg/m³", 19.4326, -99.1332],
-        ["León", "PM25", 41, "µg/m³", 21.1220, -101.6860],
-        ["Guanajuato", "PM25", 35, "µg/m³", 21.0190, -101.2574],
-        ["Celaya", "PM25", 38, "µg/m³", 20.5270, -100.8123],
-        ["Salamanca", "PM25", 45, "µg/m³", 20.5710, -101.1910],
-    ],
-    columns=["Ciudad", "Contaminante", "Valor", "Unidad", "Latitud", "Longitud"]
-)
+# ======================================
+# DATOS DE EJEMPLO SI NO HAY DATOS
+# ======================================
+if df.empty:
+    st.warning("⚠️ No hay datos en tiempo real. Mostrando datos de ejemplo.")
 
+    df = pd.DataFrame([
+        {"Ciudad": "Guanajuato", "Contaminante": "PM25", "Valor": 32, "Unidad": "µg/m³", "Latitud": 21.0186, "Longitud": -101.2591},
+        {"Ciudad": "León", "Contaminante": "PM25", "Valor": 40, "Unidad": "µg/m³", "Latitud": 21.122, "Longitud": -101.681},
+        {"Ciudad": "CDMX", "Contaminante": "PM25", "Valor": 28, "Unidad": "µg/m³", "Latitud": 19.4326, "Longitud": -99.1332}
+    ])
 
-# ===============================
-# FILTRO GUANAJUATO
-# ===============================
-if region == "Guanajuato":
-    df = df[df["Ciudad"].isin(
-        ["León", "Irapuato", "Celaya", "Salamanca", "Guanajuato"]
-    )]
+# ======================================
+# TABLA
+# ======================================
+st.subheader("📊 Datos de contaminación")
+st.dataframe(df, use_container_width=True)
 
-# ===============================
-# CONTAMINANTE
-# ===============================
+# ======================================
+# SELECCIÓN DE CONTAMINANTE
+# ======================================
 contaminante = st.selectbox(
     "🔍 Selecciona contaminante:",
     sorted(df["Contaminante"].unique())
@@ -127,11 +148,10 @@ contaminante = st.selectbox(
 
 df_f = df[df["Contaminante"] == contaminante].copy()
 
-# ===============================
+# ======================================
 # GRÁFICA
-# ===============================
+# ======================================
 st.subheader("📈 Niveles por ciudad")
-
 fig, ax = plt.subplots()
 ax.bar(df_f["Ciudad"], df_f["Valor"])
 ax.set_ylabel(df_f["Unidad"].iloc[0])
@@ -139,9 +159,9 @@ ax.set_title(f"Niveles de {contaminante}")
 plt.xticks(rotation=30)
 st.pyplot(fig)
 
-# ===============================
+# ======================================
 # MAPA
-# ===============================
+# ======================================
 st.subheader("🗺️ Mapa interactivo")
 
 layer = pdk.Layer(
@@ -154,7 +174,7 @@ layer = pdk.Layer(
 )
 
 if region == "Guanajuato":
-    view = pdk.ViewState(latitude=21.12, longitude=-101.68, zoom=7.5)
+    view = pdk.ViewState(latitude=21.02, longitude=-101.26, zoom=7.5)
 else:
     view = pdk.ViewState(latitude=23.63, longitude=-102.55, zoom=5.3)
 
@@ -166,7 +186,9 @@ deck = pdk.Deck(
 
 st.pydeck_chart(deck)
 
-st.success("✅ Aplicación cargada correctamente")
+st.success("✅ Aplicación funcionando correctamente")
+
+
 
 
 
