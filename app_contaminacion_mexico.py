@@ -23,7 +23,7 @@ if MODO_MANTENIMIENTO:
         ">
             <h1>🛠️ Sitio en mantenimiento</h1>
             <p>La aplicación está siendo actualizada</p>
-            <p><b>Modificaciones por marcelino</b> 👨‍💻</p>
+            <p><b>Modificaciones por ANTONIO</b> 👨‍💻</p>
             <p style="color:gray;">Vuelve en unos minutos 🚀</p>
         </div>
     """, unsafe_allow_html=True)
@@ -187,6 +187,7 @@ deck = pdk.Deck(
 st.pydeck_chart(deck)
 
 st.success("✅ Aplicación funcionando correctamente")
+
 
 
 
