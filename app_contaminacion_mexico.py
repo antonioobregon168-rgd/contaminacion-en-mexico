@@ -7,23 +7,24 @@ import pydeck as pdk
 # ===============================
 # MODO MANTENIMIENTO
 # ===============================
-MODO_MANTENIMIENTO = False
+MODO_MANTENIMIENTO = False  # Cambia a True si estás actualizando
 
 if MODO_MANTENIMIENTO:
     st.set_page_config(page_title="En mantenimiento", page_icon="🛠️")
     st.markdown(
         """
-        <h1 style="text-align:center;color:black;">🛠️ Sitio en mantenimiento</h1>
-        <p style="text-align:center;color:black;">
-        Modificaciones en curso por <b>Antonio</b> 👨‍💻
-        </p>
+        <div style="text-align:center;margin-top:120px;">
+            <h1 style="color:black;">🛠️ Sitio en mantenimiento</h1>
+            <p style="color:black;">Actualizaciones en curso por <b>Antonio</b> 👨‍💻</p>
+            <p style="color:gray;">Vuelve en unos minutos 🚀</p>
+        </div>
         """,
         unsafe_allow_html=True
     )
     st.stop()
 
 # ===============================
-# CONFIGURACIÓN
+# CONFIGURACIÓN GENERAL
 # ===============================
 st.set_page_config(
     page_title="Monitor de Contaminación - México",
@@ -32,6 +33,7 @@ st.set_page_config(
 )
 
 st.title("🌫️ Monitor de Contaminación del Aire en México")
+st.write("Datos ambientales en tiempo casi real (OpenAQ)")
 
 # ===============================
 # REGIÓN
@@ -42,7 +44,7 @@ region = st.selectbox(
 )
 
 # ===============================
-# INTENTO API
+# OBTENER DATOS (OpenAQ)
 # ===============================
 url = "https://api.openaq.org/v2/latest"
 params = {"country": "MX", "limit": 200}
@@ -84,10 +86,77 @@ df = pd.DataFrame(registros)
 # DATOS DE RESPALDO (CLAVE)
 # ===============================
 if df.empty:
-    st.warning("⚠️ Usando datos de respaldo (API no disponible)")
+    st.warning("⚠️ API no disponible. Usando datos de respaldo.")
 
-    df = pd.DataFrame([
+    df = pd.DataFrame(
+        [
+            ["CDMX", "PM25", 28, "µg/m³", 19.4326, -99.1332],
+            ["León", "PM25", 41, "µg/m³", 21.1220, -101.6860],
+            ["Irapuato", "PM25", 35, "µg/m³", 20.6767, -101.3563],
+            ["Celaya", "PM25", 38, "µg/m³", 20.5270, -100.8123],
+            ["Salamanca", "PM25", 45, "µg/m³", 20.5710, -101.1910],
+        ],
+        columns=["Ciudad", "Contaminante", "Valor", "Unidad", "Latitud", "Longitud"]
+    )
 
+# ===============================
+# FILTRO GUANAJUATO
+# ===============================
+if region == "Guanajuato":
+    df = df[df["Ciudad"].isin(
+        ["León", "Irapuato", "Celaya", "Salamanca", "Guanajuato"]
+    )]
+
+# ===============================
+# CONTAMINANTE
+# ===============================
+contaminante = st.selectbox(
+    "🔍 Selecciona contaminante:",
+    sorted(df["Contaminante"].unique())
+)
+
+df_f = df[df["Contaminante"] == contaminante].copy()
+
+# ===============================
+# GRÁFICA
+# ===============================
+st.subheader("📈 Niveles por ciudad")
+
+fig, ax = plt.subplots()
+ax.bar(df_f["Ciudad"], df_f["Valor"])
+ax.set_ylabel(df_f["Unidad"].iloc[0])
+ax.set_title(f"Niveles de {contaminante}")
+plt.xticks(rotation=30)
+st.pyplot(fig)
+
+# ===============================
+# MAPA
+# ===============================
+st.subheader("🗺️ Mapa interactivo")
+
+layer = pdk.Layer(
+    "ScatterplotLayer",
+    data=df_f,
+    get_position="[Longitud, Latitud]",
+    get_radius=4000,
+    get_fill_color="[0, 120, 255, 200]",
+    pickable=True
+)
+
+if region == "Guanajuato":
+    view = pdk.ViewState(latitude=21.12, longitude=-101.68, zoom=7.5)
+else:
+    view = pdk.ViewState(latitude=23.63, longitude=-102.55, zoom=5.3)
+
+deck = pdk.Deck(
+    layers=[layer],
+    initial_view_state=view,
+    tooltip={"text": "Ciudad: {Ciudad}\nValor: {Valor} {Unidad}"}
+)
+
+st.pydeck_chart(deck)
+
+st.success("✅ Aplicación cargada correctamente")
 
 
 
